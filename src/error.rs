@@ -71,6 +71,8 @@ impl fmt::Display for Error {
     }
 }
 
+impl std::error::Error for Error {}
+
 extern "C" {
     fn sqlite3_errstr(code: c_int) -> *const c_char;
 }
