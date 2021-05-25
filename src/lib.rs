@@ -52,3 +52,5 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 //! `mouse-sqlite3` is an implemetation of RDB module for `mouse` .
+
+#![deny(missing_docs)]
