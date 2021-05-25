@@ -51,10 +51,26 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use std::os::raw::c_int;
+use std::ffi::CStr;
+use std::fmt;
+use std::os::raw::{c_char, c_int};
 
 /// `Error` is a wrapper of libsqlite3 error code.
 #[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct Error {
     code: c_int,
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unsafe {
+            let c_msg = sqlite3_errstr(self.code);
+            let msg = CStr::from_ptr(c_msg);
+            f.write_str(msg.to_string_lossy().as_ref())
+        }
+    }
+}
+
+extern "C" {
+    fn sqlite3_errstr(code: c_int) -> *const c_char;
 }
