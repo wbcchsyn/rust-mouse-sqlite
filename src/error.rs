@@ -50,3 +50,10 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+
+use std::os::raw::c_int;
+
+/// `Error` is a wrapper of libsqlite3 error code.
+pub struct Error {
+    code: c_int,
+}
