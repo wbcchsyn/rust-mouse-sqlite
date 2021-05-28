@@ -51,6 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+use libsqlite3_sys::{SQLITE_DONE, SQLITE_OK, SQLITE_ROW};
 use std::ffi::CStr;
 use std::fmt;
 use std::os::raw::{c_char, c_int};
@@ -59,6 +60,15 @@ use std::os::raw::{c_char, c_int};
 #[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct Error {
     code: c_int,
+}
+
+impl Error {
+    /// Wrapper of C "SQLITE_OK".
+    pub const OK: Error = Error { code: SQLITE_OK };
+    /// Wrapper of C "SQLITE_ROW".
+    pub const ROW: Error = Error { code: SQLITE_ROW };
+    /// Wrapper of C "SQLITE_DONE".
+    pub const DONE: Error = Error { code: SQLITE_DONE };
 }
 
 impl fmt::Display for Error {
