@@ -51,10 +51,43 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-//! `mouse-sqlite3` is an implemetation of RDB module for `mouse` .
+use libsqlite3_sys::{SQLITE_DONE, SQLITE_OK, SQLITE_ROW};
+use std::ffi::CStr;
+use std::fmt;
+use std::os::raw::{c_char, c_int};
 
-#![deny(missing_docs)]
+/// `Error` is a wrapper of libsqlite3 error code.
+#[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
+pub struct Error {
+    code: c_int,
+}
 
-mod error;
+impl Error {
+    /// Wrapper of C "SQLITE_OK".
+    pub const OK: Error = Error { code: SQLITE_OK };
+    /// Wrapper of C "SQLITE_ROW".
+    pub const ROW: Error = Error { code: SQLITE_ROW };
+    /// Wrapper of C "SQLITE_DONE".
+    pub const DONE: Error = Error { code: SQLITE_DONE };
 
-pub use error::Error;
+    /// Creates a new instance.
+    pub const fn new(code: c_int) -> Self {
+        Self { code }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unsafe {
+            let c_msg = sqlite3_errstr(self.code);
+            let msg = CStr::from_ptr(c_msg);
+            f.write_str(msg.to_string_lossy().as_ref())
+        }
+    }
+}
+
+impl std::error::Error for Error {}
+
+extern "C" {
+    fn sqlite3_errstr(code: c_int) -> *const c_char;
+}
