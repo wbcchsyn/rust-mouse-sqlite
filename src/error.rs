@@ -69,6 +69,11 @@ impl Error {
     pub const ROW: Error = Error { code: SQLITE_ROW };
     /// Wrapper of C "SQLITE_DONE".
     pub const DONE: Error = Error { code: SQLITE_DONE };
+
+    /// Creates a new instance.
+    pub const fn new(code: c_int) -> Self {
+        Self { code }
+    }
 }
 
 impl fmt::Display for Error {
