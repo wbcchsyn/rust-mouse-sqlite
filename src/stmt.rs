@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use libsqlite3_sys::sqlite3_stmt;
+use libsqlite3_sys::{sqlite3_finalize, sqlite3_stmt};
 use std::os::raw::c_int;
 
 /// Wrapper of C [`sqlite3_stmt`] .
@@ -61,4 +61,10 @@ pub struct Stmt {
     raw: *mut sqlite3_stmt,
     column_count: c_int,
     is_row: bool,
+}
+
+impl Drop for Stmt {
+    fn drop(&mut self) {
+        unsafe { sqlite3_finalize(self.raw) };
+    }
 }
