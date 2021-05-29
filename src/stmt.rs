@@ -50,3 +50,15 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+
+use libsqlite3_sys::sqlite3_stmt;
+use std::os::raw::c_int;
+
+/// Wrapper of C [`sqlite3_stmt`] .
+///
+/// [`sqlite3_stmt`]: https://www.sqlite.org/c3ref/stmt.html
+pub struct Stmt {
+    raw: *mut sqlite3_stmt,
+    column_count: c_int,
+    is_row: bool,
+}
