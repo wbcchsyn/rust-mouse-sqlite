@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use libsqlite3_sys::{sqlite3_finalize, sqlite3_stmt};
+use libsqlite3_sys::{sqlite3_finalize, sqlite3_reset, sqlite3_stmt};
 use std::os::raw::c_int;
 
 /// Wrapper of C [`sqlite3_stmt`] .
@@ -66,5 +66,18 @@ pub struct Stmt {
 impl Drop for Stmt {
     fn drop(&mut self) {
         unsafe { sqlite3_finalize(self.raw) };
+    }
+}
+
+impl Stmt {
+    /// Calls C function [`sqlite3_reset`] to clear the previous result.
+    ///
+    /// This method is called automatically if necessary, so the user will rarely call this method.
+    /// Note this method does not change the binding parameters at all.
+    ///
+    /// [`sqlite3_reset`]: https://www.sqlite.org/c3ref/reset.html
+    pub fn reset(&mut self) {
+        unsafe { sqlite3_reset(self.raw) };
+        self.is_row = false;
     }
 }
