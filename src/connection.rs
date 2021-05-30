@@ -51,10 +51,17 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use crate::Stmt;
+use crate::{Error, Stmt};
+use core::convert::TryFrom;
 use core::hash::{Hash, Hasher};
-use libsqlite3_sys::{sqlite3, sqlite3_close};
+use libsqlite3_sys::{
+    sqlite3, sqlite3_close, sqlite3_open_v2, SQLITE_OPEN_CREATE, SQLITE_OPEN_NOMUTEX,
+    SQLITE_OPEN_READWRITE,
+};
 use std::collections::HashMap;
+use std::ffi::CString;
+use std::os::raw::{c_char, c_int};
+use std::path::Path;
 
 /// New type of `&'static str` , which is compared by the address.
 #[derive(Debug, Clone, Copy)]
@@ -90,5 +97,25 @@ impl Drop for Connection {
     fn drop(&mut self) {
         self.stmts.clear(); // All the Stmt instances must be finalized before close.
         unsafe { sqlite3_close(self.raw) };
+    }
+}
+
+impl TryFrom<&Path> for Connection {
+    type Error = Box<dyn std::error::Error>;
+
+    fn try_from(filename: &Path) -> Result<Self, Self::Error> {
+        let filename = CString::new(filename.to_string_lossy().as_bytes()).map_err(Box::new)?;
+        let mut raw: *mut sqlite3 = core::ptr::null_mut();
+        const FLAGS: c_int = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX;
+        const ZVFS: *const c_char = core::ptr::null();
+
+        let code = unsafe { sqlite3_open_v2(filename.as_ptr(), &mut raw, FLAGS, ZVFS) };
+        match Error::new(code) {
+            Error::OK => Ok(Self {
+                raw,
+                stmts: Default::default(),
+            }),
+            e => Err(Box::new(e)),
+        }
     }
 }
