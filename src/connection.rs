@@ -53,7 +53,7 @@
 
 use crate::Stmt;
 use core::hash::{Hash, Hasher};
-use libsqlite3_sys::sqlite3;
+use libsqlite3_sys::{sqlite3, sqlite3_close};
 use std::collections::HashMap;
 
 /// New type of `&'static str` , which is compared by the address.
@@ -84,4 +84,11 @@ impl Hash for Sql {
 pub struct Connection {
     raw: *mut sqlite3,
     stmts: HashMap<Sql, Stmt>,
+}
+
+impl Drop for Connection {
+    fn drop(&mut self) {
+        self.stmts.clear(); // All the Stmt instances must be finalized before close.
+        unsafe { sqlite3_close(self.raw) };
+    }
 }
