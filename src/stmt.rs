@@ -51,7 +51,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use libsqlite3_sys::{sqlite3_finalize, sqlite3_reset, sqlite3_stmt};
+use crate::Error;
+use libsqlite3_sys::{sqlite3_clear_bindings, sqlite3_finalize, sqlite3_reset, sqlite3_stmt};
 use std::os::raw::c_int;
 
 /// Wrapper of C [`sqlite3_stmt`] .
@@ -79,5 +80,26 @@ impl Stmt {
     pub fn reset(&mut self) {
         unsafe { sqlite3_reset(self.raw) };
         self.is_row = false;
+    }
+
+    /// Calls C function [`sqlite3_reset`] and [`sqlite3_clear_bindings`] to reset all the
+    /// parameters.
+    ///
+    /// Because the document of [`sqlite3_clear_bindings`] is ambiguous, this method calls
+    /// [`sqlite3_reset`] at the same time.
+    ///
+    /// # Panics
+    ///
+    /// Panics if [`sqlite3_clear_bindings`] failed.
+    ///
+    /// [`sqlite3_reset`]: https://www.sqlite.org/c3ref/reset.html
+    /// [`sqlite3_clear_bindings`]: https://www.sqlite.org/c3ref/clear_bindings.html
+    pub fn clear(&mut self) {
+        self.reset();
+        let code = unsafe { sqlite3_clear_bindings(self.raw) };
+        let e = Error::new(code);
+        if e != Error::OK {
+            panic!("{}", e);
+        }
     }
 }
