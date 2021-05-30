@@ -50,3 +50,26 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+
+use core::hash::{Hash, Hasher};
+
+/// New type of `&'static str` , which is compared by the address.
+#[derive(Debug, Clone, Copy)]
+struct Sql(*const u8);
+
+impl PartialEq for Sql {
+    fn eq(&self, other: &Self) -> bool {
+        core::ptr::eq(self.0, other.0)
+    }
+}
+
+impl Eq for Sql {}
+
+impl Hash for Sql {
+    fn hash<H>(&self, hasher: &mut H)
+    where
+        H: Hasher,
+    {
+        (self.0 as usize).hash(hasher)
+    }
+}
