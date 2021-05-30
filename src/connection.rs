@@ -51,7 +51,10 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+use crate::Stmt;
 use core::hash::{Hash, Hasher};
+use libsqlite3_sys::sqlite3;
+use std::collections::HashMap;
 
 /// New type of `&'static str` , which is compared by the address.
 #[derive(Debug, Clone, Copy)]
@@ -72,4 +75,13 @@ impl Hash for Sql {
     {
         (self.0 as usize).hash(hasher)
     }
+}
+
+/// Wrapper of C [`sqlite3 *`] with cache of [`Stmt`] .
+///
+/// [`sqlite3 *`]: https://www.sqlite.org/c3ref/sqlite3.html
+/// [`Stmt`]: struct.Stmt.html
+pub struct Connection {
+    raw: *mut sqlite3,
+    stmts: HashMap<Sql, Stmt>,
 }
