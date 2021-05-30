@@ -55,9 +55,9 @@ use crate::Error;
 use core::convert::TryFrom;
 use libsqlite3_sys::{
     sqlite3_bind_blob, sqlite3_bind_int64, sqlite3_bind_null, sqlite3_clear_bindings,
-    sqlite3_column_int64, sqlite3_column_type, sqlite3_destructor_type, sqlite3_finalize,
-    sqlite3_reset, sqlite3_step, sqlite3_stmt, SQLITE_INTEGER, SQLITE_NULL, SQLITE_RANGE,
-    SQLITE_TOOBIG,
+    sqlite3_column_blob, sqlite3_column_bytes, sqlite3_column_int64, sqlite3_column_type,
+    sqlite3_destructor_type, sqlite3_finalize, sqlite3_reset, sqlite3_step, sqlite3_stmt,
+    SQLITE_BLOB, SQLITE_INTEGER, SQLITE_NULL, SQLITE_RANGE, SQLITE_TOOBIG,
 };
 use std::os::raw::{c_int, c_void};
 
@@ -257,6 +257,46 @@ impl Stmt {
             match sqlite3_column_type(self.raw, index) {
                 SQLITE_NULL => None,
                 SQLITE_INTEGER => Some(sqlite3_column_int64(self.raw, index)),
+                _ => panic!("Bad column type"),
+            }
+        }
+    }
+
+    /// Wrapper of C function [`sqlite3_column_type`] , [`sqlite3_column_blob`] , and
+    /// [`sqlite3_column_bytes`] .
+    ///
+    /// This method calls [`sqlite3_column_type`] first.
+    ///
+    /// If the value type is Null, returns `None` , or if the value type is Blob, calls
+    /// [`sqlite3_column_blob`] and [`sqlite3_column_bytes`] and returns the result.
+    ///
+    /// Note that `index` starts at 0, not 1.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the previous [`step`] did not returns `true` or [`step`] did not called.
+    ///
+    /// Panics if `index` is out of range.
+    ///
+    /// Panics if the column value type is neither Null nor Blob.
+    ///
+    /// [`step`]: #method.step
+    /// [`sqlite3_column_type`]: https://www.sqlite.org/c3ref/column_blob.html
+    /// [`sqlite3_column_blob`]: https://www.sqlite.org/c3ref/column_blob.html
+    /// [`sqlite3_column_bytes`]: https://www.sqlite.org/c3ref/column_blob.html
+    pub fn column_blob(&mut self, index: usize) -> Option<&[u8]> {
+        assert_eq!(true, self.is_row);
+        assert!(index < (self.column_count as usize));
+
+        let index = index as c_int;
+        unsafe {
+            match sqlite3_column_type(self.raw, index) {
+                SQLITE_NULL => None,
+                SQLITE_BLOB => {
+                    let ptr = sqlite3_column_blob(self.raw, index) as *const u8;
+                    let len = sqlite3_column_bytes(self.raw, index) as usize;
+                    Some(core::slice::from_raw_parts(ptr, len))
+                }
                 _ => panic!("Bad column type"),
             }
         }
