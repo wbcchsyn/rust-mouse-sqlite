@@ -55,8 +55,10 @@
 
 #![deny(missing_docs)]
 
+mod connection;
 mod error;
 mod stmt;
 
+pub use connection::Connection;
 pub use error::Error;
 pub use stmt::Stmt;
