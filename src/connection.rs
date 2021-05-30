@@ -59,7 +59,7 @@ use libsqlite3_sys::{
     sqlite3, sqlite3_close, sqlite3_open_v2, sqlite3_prepare_v2, sqlite3_stmt, SQLITE_OPEN_CREATE,
     SQLITE_OPEN_NOMUTEX, SQLITE_OPEN_READWRITE, SQLITE_TOOBIG,
 };
-use std::collections::HashMap;
+use std::collections::hash_map::{Entry, HashMap};
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
 use std::path::Path;
@@ -122,6 +122,23 @@ impl TryFrom<&Path> for Connection {
 }
 
 impl Connection {
+    /// Creates and caches [`Stmt`] if not cached and provides a reference to the cached instance.
+    ///
+    /// [`Stmt`]: struct.Stmt.html
+    pub fn stmt(&mut self, sql: &'static str) -> Result<&mut Stmt, Error> {
+        match self.stmts.entry(Sql(sql.as_ptr())) {
+            Entry::Occupied(o) => {
+                let stmt = o.into_mut();
+                stmt.clear();
+                Ok(stmt)
+            }
+            Entry::Vacant(v) => {
+                let stmt = Self::build_stmt(self.raw, sql)?;
+                Ok(v.insert(stmt))
+            }
+        }
+    }
+
     /// Creates [`Stmt`] instance.
     ///
     /// [`Stmt`]: struct.Stmt.html
