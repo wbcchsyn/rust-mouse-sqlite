@@ -56,5 +56,7 @@
 #![deny(missing_docs)]
 
 mod error;
+mod stmt;
 
 pub use error::Error;
+pub use stmt::Stmt;
