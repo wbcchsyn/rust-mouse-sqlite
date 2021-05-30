@@ -54,9 +54,10 @@
 use crate::{Error, Stmt};
 use core::convert::TryFrom;
 use core::hash::{Hash, Hasher};
+use core::ptr::NonNull;
 use libsqlite3_sys::{
-    sqlite3, sqlite3_close, sqlite3_open_v2, SQLITE_OPEN_CREATE, SQLITE_OPEN_NOMUTEX,
-    SQLITE_OPEN_READWRITE,
+    sqlite3, sqlite3_close, sqlite3_open_v2, sqlite3_prepare_v2, sqlite3_stmt, SQLITE_OPEN_CREATE,
+    SQLITE_OPEN_NOMUTEX, SQLITE_OPEN_READWRITE, SQLITE_TOOBIG,
 };
 use std::collections::HashMap;
 use std::ffi::CString;
@@ -116,6 +117,31 @@ impl TryFrom<&Path> for Connection {
                 stmts: Default::default(),
             }),
             e => Err(Box::new(e)),
+        }
+    }
+}
+
+impl Connection {
+    /// Creates [`Stmt`] instance.
+    ///
+    /// [`Stmt`]: struct.Stmt.html
+    pub fn stmt_once(&mut self, sql: &str) -> Result<Stmt, Error> {
+        Self::build_stmt(self.raw, sql)
+    }
+
+    fn build_stmt(raw: *mut sqlite3, sql: &str) -> Result<Stmt, Error> {
+        let zsql = sql.as_ptr() as *const c_char;
+        let nbytes = c_int::try_from(sql.len()).map_err(|_| Error::new(SQLITE_TOOBIG))?;
+        let mut raw_stmt: *mut sqlite3_stmt = core::ptr::null_mut();
+        let mut pztail: *const c_char = core::ptr::null();
+
+        let code = unsafe { sqlite3_prepare_v2(raw, zsql, nbytes, &mut raw_stmt, &mut pztail) };
+        match Error::new(code) {
+            Error::OK => {
+                let ptr = NonNull::new(raw_stmt).unwrap();
+                Ok(Stmt::from(ptr))
+            }
+            e => Err(e),
         }
     }
 }
