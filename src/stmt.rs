@@ -53,11 +53,12 @@
 
 use crate::Error;
 use core::convert::TryFrom;
+use core::ptr::NonNull;
 use libsqlite3_sys::{
     sqlite3_bind_blob, sqlite3_bind_int64, sqlite3_bind_null, sqlite3_clear_bindings,
-    sqlite3_column_blob, sqlite3_column_bytes, sqlite3_column_int64, sqlite3_column_type,
-    sqlite3_destructor_type, sqlite3_finalize, sqlite3_reset, sqlite3_step, sqlite3_stmt,
-    SQLITE_BLOB, SQLITE_INTEGER, SQLITE_NULL, SQLITE_RANGE, SQLITE_TOOBIG,
+    sqlite3_column_blob, sqlite3_column_bytes, sqlite3_column_count, sqlite3_column_int64,
+    sqlite3_column_type, sqlite3_destructor_type, sqlite3_finalize, sqlite3_reset, sqlite3_step,
+    sqlite3_stmt, SQLITE_BLOB, SQLITE_INTEGER, SQLITE_NULL, SQLITE_RANGE, SQLITE_TOOBIG,
 };
 use std::os::raw::{c_int, c_void};
 
@@ -73,6 +74,17 @@ pub struct Stmt {
 impl Drop for Stmt {
     fn drop(&mut self) {
         unsafe { sqlite3_finalize(self.raw) };
+    }
+}
+
+impl From<NonNull<sqlite3_stmt>> for Stmt {
+    fn from(raw: NonNull<sqlite3_stmt>) -> Self {
+        let column_count = unsafe { sqlite3_column_count(raw.as_ptr()) };
+        Self {
+            raw: raw.as_ptr(),
+            column_count,
+            is_row: false,
+        }
     }
 }
 
