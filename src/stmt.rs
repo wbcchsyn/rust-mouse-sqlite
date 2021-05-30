@@ -52,8 +52,10 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 use crate::Error;
+use core::convert::TryFrom;
 use libsqlite3_sys::{
-    sqlite3_clear_bindings, sqlite3_finalize, sqlite3_reset, sqlite3_step, sqlite3_stmt,
+    sqlite3_bind_int64, sqlite3_clear_bindings, sqlite3_finalize, sqlite3_reset, sqlite3_step,
+    sqlite3_stmt, SQLITE_RANGE,
 };
 use std::os::raw::c_int;
 
@@ -133,6 +135,33 @@ impl Stmt {
                 self.reset();
                 Err(e)
             }
+        }
+    }
+
+    /// Wrapper of C function [`sqlite3_bind_int64`] .
+    ///
+    /// Calls method [`reset`] if the privious [`step`] returns `true` , and calls
+    /// [`sqlite3_bind_int64`] .
+    /// (It is necesarry to call [`sqlite3_reset`] after [`sqlite3_step`] , however, [`step`]
+    /// did not call [`sqlite3_reset`] when it returned `true` .)
+    ///
+    /// Note that `index` starts at 1, not 0.
+    ///
+    /// [`reset`]: #method.reset
+    /// [`step`]: #method.step
+    /// [`sqlite3_bind_int64`]: https://www.sqlite.org/c3ref/bind_blob.html
+    /// [`sqlite3_reset`]: https://www.sqlite.org/c3ref/reset.html
+    /// [`sqlite3_step`]: https://www.sqlite.org/c3ref/step.html
+    pub fn bind_int(&mut self, index: usize, val: i64) -> Result<(), Error> {
+        if self.is_row {
+            self.reset();
+        }
+
+        let index = c_int::try_from(index).map_err(|_| Error::new(SQLITE_RANGE))?;
+        let code = unsafe { sqlite3_bind_int64(self.raw, index, val) };
+        match Error::new(code) {
+            Error::OK => Ok(()),
+            e => Err(e),
         }
     }
 }
