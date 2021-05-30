@@ -52,7 +52,9 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 use crate::Error;
-use libsqlite3_sys::{sqlite3_clear_bindings, sqlite3_finalize, sqlite3_reset, sqlite3_stmt};
+use libsqlite3_sys::{
+    sqlite3_clear_bindings, sqlite3_finalize, sqlite3_reset, sqlite3_step, sqlite3_stmt,
+};
 use std::os::raw::c_int;
 
 /// Wrapper of C [`sqlite3_stmt`] .
@@ -100,6 +102,37 @@ impl Stmt {
         let e = Error::new(code);
         if e != Error::OK {
             panic!("{}", e);
+        }
+    }
+
+    /// Wrapper of C function [`sqlite3_step`] and returns whether the SQL statement returns any
+    /// data to be fetched.
+    ///
+    /// Returns `true` if the SQL statement being executed returns any data (i.e. [`sqlite3_step`]
+    /// returned `SQLITE_ROW`.)
+    ///
+    /// Calls [`reset`] and returns `false` if the SQL statement has finished (i.e.
+    /// [`sqlite3_step`] returned `SQLITE_DONE` . Then no data was returned.)
+    ///
+    /// Otherwise, i.e. [`sqlite3_step`] failed, calls [`reset`] and returns `Err` .
+    ///
+    /// [`reset`]: #method.reset
+    /// [`sqlite3_step`]: https://www.sqlite.org/c3ref/step.html
+    pub fn step(&mut self) -> Result<bool, Error> {
+        let code = unsafe { sqlite3_step(self.raw) };
+        match Error::new(code) {
+            Error::DONE => {
+                self.reset();
+                Ok(false)
+            }
+            Error::ROW => {
+                self.is_row = true;
+                Ok(true)
+            }
+            e => {
+                self.reset();
+                Err(e)
+            }
         }
     }
 }
