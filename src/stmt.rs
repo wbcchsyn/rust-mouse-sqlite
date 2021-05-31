@@ -78,6 +78,19 @@ impl Drop for Stmt {
     }
 }
 
+/// Builds [`Stmt`] from raw pointer of `sqlite3_stmt` .
+///
+/// [`Stmt`]: struct.Stmt.html
+#[inline]
+pub fn from_raw(raw: NonNull<sqlite3_stmt>) -> Stmt {
+    let column_count = unsafe { sqlite3_column_count(raw.as_ptr()) };
+    Stmt {
+        raw: raw.as_ptr(),
+        column_count,
+        is_row: false,
+    }
+}
+
 impl From<NonNull<sqlite3_stmt>> for Stmt {
     #[inline]
     fn from(raw: NonNull<sqlite3_stmt>) -> Self {
