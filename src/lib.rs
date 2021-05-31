@@ -61,4 +61,5 @@ mod stmt;
 
 pub use connection::Connection;
 pub use error::Error;
+use stmt::from_raw as stmt_from_raw;
 pub use stmt::Stmt;
