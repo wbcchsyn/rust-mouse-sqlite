@@ -156,7 +156,7 @@ impl Connection {
         match Error::new(code) {
             Error::OK => {
                 let ptr = NonNull::new(raw_stmt).unwrap();
-                Ok(Stmt::from(ptr))
+                Ok(crate::stmt_from_raw(ptr))
             }
             e => Err(e),
         }
