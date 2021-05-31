@@ -91,18 +91,6 @@ pub fn from_raw(raw: NonNull<sqlite3_stmt>) -> Stmt {
     }
 }
 
-impl From<NonNull<sqlite3_stmt>> for Stmt {
-    #[inline]
-    fn from(raw: NonNull<sqlite3_stmt>) -> Self {
-        let column_count = unsafe { sqlite3_column_count(raw.as_ptr()) };
-        Self {
-            raw: raw.as_ptr(),
-            column_count,
-            is_row: false,
-        }
-    }
-}
-
 impl Stmt {
     /// Calls C function [`sqlite3_reset`] to clear the previous result.
     ///
