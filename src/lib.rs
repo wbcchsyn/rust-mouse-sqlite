@@ -61,5 +61,26 @@ mod stmt;
 
 pub use connection::Connection;
 pub use error::Error;
+use std::os::raw::c_int;
 use stmt::from_raw as stmt_from_raw;
 pub use stmt::Stmt;
+
+// Constants for sqlite3_open_v2()
+// https://www.sqlite.org/draft/c3ref/c_open_autoproxy.html
+const SQLITE_OPEN_READWRITE: c_int = 0x00000002;
+const SQLITE_OPEN_CREATE: c_int = 0x00000004;
+const SQLITE_OPEN_NOMUTEX: c_int = 0x00008000;
+
+// Error constants
+// https://www.sqlite.org/draft/rescode.html
+const SQLITE_OK: c_int = 0;
+const SQLITE_TOOBIG: c_int = 18;
+const SQLITE_RANGE: c_int = 25;
+const SQLITE_DONE: c_int = 101;
+const SQLITE_ROW: c_int = 100;
+
+// Constants for column type
+// https://www.sqlite.org/draft/c3ref/c_blob.html
+const SQLITE_INTEGER: c_int = 1;
+const SQLITE_BLOB: c_int = 4;
+const SQLITE_NULL: c_int = 5;
