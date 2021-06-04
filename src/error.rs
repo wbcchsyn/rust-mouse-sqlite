@@ -51,7 +51,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-use libsqlite3_sys::{SQLITE_DONE, SQLITE_OK, SQLITE_ROW};
+use crate::{SQLITE_DONE, SQLITE_OK, SQLITE_ROW};
 use std::ffi::CStr;
 use std::fmt;
 use std::os::raw::{c_char, c_int};
