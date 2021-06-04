@@ -53,7 +53,8 @@
 
 use crate::{
     sqlite3, sqlite3_close, sqlite3_open_v2, sqlite3_prepare_v2, sqlite3_stmt, Error, Stmt,
-    SQLITE_OPEN_CREATE, SQLITE_OPEN_NOMUTEX, SQLITE_OPEN_READWRITE, SQLITE_TOOBIG,
+    SQLITE_OPEN_CREATE, SQLITE_OPEN_MEMORY, SQLITE_OPEN_NOMUTEX, SQLITE_OPEN_READWRITE,
+    SQLITE_TOOBIG,
 };
 use core::convert::TryFrom;
 use core::hash::{Hash, Hasher};
@@ -127,6 +128,24 @@ impl TryFrom<&Path> for Connection {
 }
 
 impl Connection {
+    /// Opens in-memory database and returns a new instance.
+    #[inline]
+    pub fn open_memory_db() -> Result<Self, Error> {
+        let filename: *const c_char = "memory_db".as_ptr() as *const c_char;
+        let mut raw: *mut sqlite3 = core::ptr::null_mut();
+        const FLAGS: c_int = SQLITE_OPEN_MEMORY | SQLITE_OPEN_NOMUTEX;
+        const ZVFS: *const c_char = core::ptr::null();
+
+        let code = unsafe { sqlite3_open_v2(filename, &mut raw, FLAGS, ZVFS) };
+        match Error::new(code) {
+            Error::OK => Ok(Self {
+                raw,
+                stmts: Default::default(),
+            }),
+            e => Err(e),
+        }
+    }
+
     /// Creates and caches [`Stmt`] if not cached and provides a reference to the cached instance.
     ///
     /// [`Stmt`]: struct.Stmt.html
@@ -176,6 +195,21 @@ mod tests {
     use super::Connection;
     use core::convert::TryFrom;
     use tempfile::tempdir;
+
+    #[test]
+    fn memory_db() {
+        let tmp = tempdir().unwrap();
+        let path = tmp.path().to_owned();
+        let path = path.join("test_sqlite");
+        let mut con = Connection::try_from(path.as_ref()).unwrap();
+
+        let sql = r#"CREATE TABLE IF NOT EXISTS "foo" (
+            "_id" INTEGER PRIMARY KEY,
+            "value" TEXT
+        )"#;
+        let mut stmt = con.stmt_once(sql).unwrap();
+        assert_eq!(Ok(false), stmt.step());
+    }
 
     #[test]
     fn create() {
