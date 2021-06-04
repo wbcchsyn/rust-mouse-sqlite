@@ -191,6 +191,17 @@ mod tests {
     }
 
     #[test]
+    fn default_stmt() {
+        let mut con = Connection::default();
+        const SQL: &'static str = r#"CREATE TABLE IF NOT EXISTS "foo" (
+            "_id" INTEGER PRIMARY KEY,
+            "value" TEXT
+        )"#;
+        assert!(con.stmt_once(SQL).is_err());
+        assert!(con.stmt(SQL).is_err());
+    }
+
+    #[test]
     fn create() {
         let tmp = tempdir().unwrap();
         let path = tmp.path().to_owned();
