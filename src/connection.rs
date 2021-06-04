@@ -104,6 +104,18 @@ impl Drop for Connection {
     }
 }
 
+impl Default for Connection {
+    /// Builds a default `Connection` .
+    ///
+    /// The instance is not opened and method [`stmt`] and [`stmt_once`] are always failed.
+    fn default() -> Self {
+        Self {
+            raw: core::ptr::null_mut(),
+            stmts: HashMap::default(),
+        }
+    }
+}
+
 impl TryFrom<&Path> for Connection {
     type Error = Box<dyn std::error::Error>;
 
@@ -175,6 +187,22 @@ mod tests {
     use super::Connection;
     use core::convert::TryFrom;
     use tempfile::tempdir;
+
+    #[test]
+    fn default() {
+        let _con = Connection::default();
+    }
+
+    #[test]
+    fn default_stmt() {
+        let mut con = Connection::default();
+        const SQL: &'static str = r#"CREATE TABLE IF NOT EXISTS "foo" (
+            "_id" INTEGER PRIMARY KEY,
+            "value" TEXT
+        )"#;
+        assert!(con.stmt_once(SQL).is_err());
+        assert!(con.stmt(SQL).is_err());
+    }
 
     #[test]
     fn create() {
