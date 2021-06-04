@@ -54,12 +54,11 @@
 use crate::{
     sqlite3_bind_blob, sqlite3_bind_int64, sqlite3_bind_null, sqlite3_clear_bindings,
     sqlite3_column_blob, sqlite3_column_bytes, sqlite3_column_count, sqlite3_column_int64,
-    sqlite3_column_type, sqlite3_finalize, sqlite3_reset, sqlite3_step, Error, SQLITE_BLOB,
-    SQLITE_INTEGER, SQLITE_NULL, SQLITE_RANGE, SQLITE_TOOBIG,
+    sqlite3_column_type, sqlite3_finalize, sqlite3_reset, sqlite3_step, sqlite3_stmt, Error,
+    SQLITE_BLOB, SQLITE_INTEGER, SQLITE_NULL, SQLITE_RANGE, SQLITE_TOOBIG,
 };
 use core::convert::TryFrom;
 use core::ptr::NonNull;
-use libsqlite3_sys::sqlite3_stmt;
 use std::os::raw::{c_int, c_void};
 
 /// Wrapper of C [`sqlite3_stmt`] .

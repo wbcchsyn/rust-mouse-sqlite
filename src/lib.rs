@@ -61,10 +61,18 @@ mod stmt;
 
 pub use connection::Connection;
 pub use error::Error;
-use libsqlite3_sys::{sqlite3, sqlite3_stmt};
 use std::os::raw::{c_char, c_int, c_void};
 use stmt::from_raw as stmt_from_raw;
 pub use stmt::Stmt;
+
+mod libsqlite3 {
+    #[allow(non_camel_case_types)]
+    pub enum sqlite3 {}
+
+    #[allow(non_camel_case_types)]
+    pub enum sqlite3_stmt {}
+}
+use libsqlite3::*;
 
 // Constants for sqlite3_open_v2()
 // https://www.sqlite.org/draft/c3ref/c_open_autoproxy.html
