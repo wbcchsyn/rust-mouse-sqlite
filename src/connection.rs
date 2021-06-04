@@ -89,6 +89,9 @@ impl Hash for Sql {
 
 /// Wrapper of C [`sqlite3 *`] with cache of [`Stmt`] .
 ///
+/// Use `TryFrom` implementation to build an instance, or method [`open_memory_db`] .
+///
+/// [`open_memory_db`]: #method.open_memory_db
 /// [`sqlite3 *`]: https://www.sqlite.org/c3ref/sqlite3.html
 /// [`Stmt`]: struct.Stmt.html
 pub struct Connection {
