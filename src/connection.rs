@@ -105,6 +105,9 @@ impl Drop for Connection {
 }
 
 impl Default for Connection {
+    /// Builds a default `Connection` .
+    ///
+    /// The instance is not opened and method [`stmt`] and [`stmt_once`] are always failed.
     fn default() -> Self {
         Self {
             raw: core::ptr::null_mut(),
