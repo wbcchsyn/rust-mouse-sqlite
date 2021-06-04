@@ -169,3 +169,90 @@ impl Connection {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Connection;
+    use core::convert::TryFrom;
+    use tempfile::tempdir;
+
+    #[test]
+    fn create() {
+        let tmp = tempdir().unwrap();
+        let path = tmp.path().to_owned();
+        let path = path.join("test_sqlite");
+        assert!(Connection::try_from(path.as_ref()).is_ok());
+    }
+
+    #[test]
+    fn create_table() {
+        let tmp = tempdir().unwrap();
+        let path = tmp.path().to_owned();
+        let path = path.join("test_sqlite");
+        let mut con = Connection::try_from(path.as_ref()).unwrap();
+
+        let sql = r#"CREATE TABLE IF NOT EXISTS "foo" (
+            "_id" INTEGER PRIMARY KEY,
+            "value" TEXT
+        )"#;
+        let mut stmt = con.stmt_once(sql).unwrap();
+        assert_eq!(Ok(false), stmt.step());
+    }
+
+    #[test]
+    fn insert_select() {
+        let tmp = tempdir().unwrap();
+        let path = tmp.path().to_owned();
+        let path = path.join("test_sqlite");
+        let mut con = Connection::try_from(path.as_ref()).unwrap();
+
+        {
+            let sql = r#"CREATE TABLE IF NOT EXISTS "foo" (
+            "_id" INTEGER PRIMARY KEY,
+            "value" BLOB
+            )"#;
+            let mut stmt = con.stmt_once(sql).unwrap();
+            assert_eq!(Ok(false), stmt.step());
+        }
+
+        const SELECT: &'static str = r#"SELECT "_id", "value" from "foo" ORDER BY "_id""#;
+        const INSERT: &'static str = r#"INSERT INTO "foo" ("value") VALUES (?1)"#;
+
+        {
+            let stmt = con.stmt(SELECT).unwrap();
+            assert_eq!(Ok(false), stmt.step());
+        }
+
+        const FIRST_VALUE: &'static [u8] = &[1, 2, 3];
+        const SECOND_VALUE: &'static [u8] = &[4, 5];
+
+        {
+            let stmt = con.stmt(INSERT).unwrap();
+
+            assert!(stmt.bind_blob(1, FIRST_VALUE).is_ok());
+            assert_eq!(Ok(false), stmt.step());
+
+            assert!(stmt.bind_blob(1, SECOND_VALUE).is_ok());
+            assert_eq!(Ok(false), stmt.step());
+
+            assert!(stmt.bind_null(1).is_ok());
+            assert_eq!(Ok(false), stmt.step());
+        }
+
+        {
+            let stmt = con.stmt(SELECT).unwrap();
+
+            assert_eq!(Ok(true), stmt.step());
+            assert_eq!(Some(1), stmt.column_int(0));
+            assert_eq!(Some(FIRST_VALUE), stmt.column_blob(1));
+
+            assert_eq!(Ok(true), stmt.step());
+            assert_eq!(Some(2), stmt.column_int(0));
+            assert_eq!(Some(SECOND_VALUE), stmt.column_blob(1));
+
+            assert_eq!(Ok(true), stmt.step());
+            assert_eq!(Some(3), stmt.column_int(0));
+            assert_eq!(None, stmt.column_blob(1));
+        }
+    }
+}
