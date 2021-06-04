@@ -169,3 +169,18 @@ impl Connection {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Connection;
+    use core::convert::TryFrom;
+    use tempfile::tempdir;
+
+    #[test]
+    fn create() {
+        let tmp = tempdir().unwrap();
+        let path = tmp.path().to_owned();
+        let path = path.join("test_sqlite");
+        assert!(Connection::try_from(path.as_ref()).is_ok());
+    }
+}
