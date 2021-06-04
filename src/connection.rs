@@ -69,6 +69,7 @@ use std::path::Path;
 struct Sql(*const u8);
 
 impl PartialEq for Sql {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         core::ptr::eq(self.0, other.0)
     }
@@ -77,6 +78,7 @@ impl PartialEq for Sql {
 impl Eq for Sql {}
 
 impl Hash for Sql {
+    #[inline]
     fn hash<H>(&self, hasher: &mut H)
     where
         H: Hasher,
@@ -95,6 +97,7 @@ pub struct Connection {
 }
 
 impl Drop for Connection {
+    #[inline]
     fn drop(&mut self) {
         self.stmts.clear(); // All the Stmt instances must be finalized before close.
         unsafe { sqlite3_close(self.raw) };
@@ -104,6 +107,7 @@ impl Drop for Connection {
 impl TryFrom<&Path> for Connection {
     type Error = Box<dyn std::error::Error>;
 
+    #[inline]
     fn try_from(filename: &Path) -> Result<Self, Self::Error> {
         let filename = CString::new(filename.to_string_lossy().as_bytes()).map_err(Box::new)?;
         let mut raw: *mut sqlite3 = core::ptr::null_mut();
@@ -125,6 +129,7 @@ impl Connection {
     /// Creates and caches [`Stmt`] if not cached and provides a reference to the cached instance.
     ///
     /// [`Stmt`]: struct.Stmt.html
+    #[inline]
     pub fn stmt(&mut self, sql: &'static str) -> Result<&mut Stmt, Error> {
         match self.stmts.entry(Sql(sql.as_ptr())) {
             Entry::Occupied(o) => {
@@ -142,10 +147,12 @@ impl Connection {
     /// Creates [`Stmt`] instance.
     ///
     /// [`Stmt`]: struct.Stmt.html
+    #[inline]
     pub fn stmt_once(&mut self, sql: &str) -> Result<Stmt, Error> {
         Self::build_stmt(self.raw, sql)
     }
 
+    #[inline]
     fn build_stmt(raw: *mut sqlite3, sql: &str) -> Result<Stmt, Error> {
         let zsql = sql.as_ptr() as *const c_char;
         let nbytes = c_int::try_from(sql.len()).map_err(|_| Error::new(SQLITE_TOOBIG))?;
