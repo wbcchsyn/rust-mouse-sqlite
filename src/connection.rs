@@ -96,6 +96,8 @@ pub struct Connection {
     stmts: HashMap<Sql, Stmt>,
 }
 
+unsafe impl Send for Connection {}
+
 impl Drop for Connection {
     #[inline]
     fn drop(&mut self) {
