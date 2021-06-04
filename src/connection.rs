@@ -183,4 +183,19 @@ mod tests {
         let path = path.join("test_sqlite");
         assert!(Connection::try_from(path.as_ref()).is_ok());
     }
+
+    #[test]
+    fn create_table() {
+        let tmp = tempdir().unwrap();
+        let path = tmp.path().to_owned();
+        let path = path.join("test_sqlite");
+        let mut con = Connection::try_from(path.as_ref()).unwrap();
+
+        let sql = r#"CREATE TABLE IF NOT EXISTS "foo" (
+            "_id" INTEGER PRIMARY KEY,
+            "value" TEXT
+        )"#;
+        let mut stmt = con.stmt_once(sql).unwrap();
+        assert_eq!(Ok(false), stmt.step());
+    }
 }
