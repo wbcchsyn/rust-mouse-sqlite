@@ -104,6 +104,15 @@ impl Drop for Connection {
     }
 }
 
+impl Default for Connection {
+    fn default() -> Self {
+        Self {
+            raw: core::ptr::null_mut(),
+            stmts: HashMap::default(),
+        }
+    }
+}
+
 impl TryFrom<&Path> for Connection {
     type Error = Box<dyn std::error::Error>;
 
@@ -175,6 +184,11 @@ mod tests {
     use super::Connection;
     use core::convert::TryFrom;
     use tempfile::tempdir;
+
+    #[test]
+    fn default() {
+        let _con = Connection::default();
+    }
 
     #[test]
     fn create() {
