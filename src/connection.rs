@@ -105,6 +105,12 @@ impl Drop for Connection {
 }
 
 impl Default for Connection {
+    /// Builds a default `Connection` .
+    ///
+    /// The instance is not opened and method [`stmt`] and [`stmt_once`] are always failed.
+    ///
+    /// [`stmt`]: #method.stmt
+    /// [`stmt_once`]: #method.stmt_once
     fn default() -> Self {
         Self {
             raw: core::ptr::null_mut(),
@@ -200,7 +206,6 @@ mod tests {
         assert!(con.stmt_once(SQL).is_err());
         assert!(con.stmt(SQL).is_err());
     }
-
     #[test]
     fn create() {
         let tmp = tempdir().unwrap();
