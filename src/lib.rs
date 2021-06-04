@@ -61,7 +61,8 @@ mod stmt;
 
 pub use connection::Connection;
 pub use error::Error;
-use std::os::raw::c_int;
+use libsqlite3_sys::{sqlite3, sqlite3_stmt};
+use std::os::raw::{c_char, c_int, c_void};
 use stmt::from_raw as stmt_from_raw;
 pub use stmt::Stmt;
 
@@ -84,3 +85,44 @@ const SQLITE_ROW: c_int = 100;
 const SQLITE_INTEGER: c_int = 1;
 const SQLITE_BLOB: c_int = 4;
 const SQLITE_NULL: c_int = 5;
+
+#[link(name = "sqlite3")]
+extern "C" {
+    fn sqlite3_open_v2(
+        filename: *const c_char,
+        ppdb: *mut *mut sqlite3,
+        flags: c_int,
+        zvfs: *const c_char,
+    ) -> c_int;
+    fn sqlite3_close(pdb: *mut sqlite3) -> c_int;
+
+    fn sqlite3_prepare_v2(
+        pdb: *mut sqlite3,
+        zsql: *const c_char,
+        nbyte: c_int,
+        ppstmt: *mut *mut sqlite3_stmt,
+        pztail: *mut *const c_char,
+    ) -> c_int;
+    fn sqlite3_finalize(pstmt: *mut sqlite3_stmt) -> c_int;
+    fn sqlite3_column_count(pstmt: *mut sqlite3_stmt) -> c_int;
+
+    fn sqlite3_bind_blob(
+        pstmt: *mut sqlite3_stmt,
+        index: c_int,
+        pval: *const c_void,
+        vlen: c_int,
+        destructor: *const c_void,
+    ) -> c_int;
+    fn sqlite3_bind_int64(pstmt: *mut sqlite3_stmt, index: c_int, val: i64) -> c_int;
+    fn sqlite3_bind_null(pstmt: *mut sqlite3_stmt, index: c_int) -> c_int;
+
+    fn sqlite3_clear_bindings(pstmt: *mut sqlite3_stmt) -> c_int;
+    fn sqlite3_reset(pstmt: *mut sqlite3_stmt) -> c_int;
+
+    fn sqlite3_step(pstmt: *mut sqlite3_stmt) -> c_int;
+
+    fn sqlite3_column_type(pstmt: *mut sqlite3_stmt, icol: c_int) -> c_int;
+    fn sqlite3_column_blob(pstmt: *mut sqlite3_stmt, icol: c_int) -> *const c_void;
+    fn sqlite3_column_bytes(pstmt: *mut sqlite3_stmt, icol: c_int) -> c_int;
+    fn sqlite3_column_int64(pstmt: *mut sqlite3_stmt, icol: c_int) -> i64;
+}

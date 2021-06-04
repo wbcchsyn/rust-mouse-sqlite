@@ -52,12 +52,13 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 use crate::{
-    Error, Stmt, SQLITE_OPEN_CREATE, SQLITE_OPEN_NOMUTEX, SQLITE_OPEN_READWRITE, SQLITE_TOOBIG,
+    sqlite3_close, sqlite3_open_v2, sqlite3_prepare_v2, Error, Stmt, SQLITE_OPEN_CREATE,
+    SQLITE_OPEN_NOMUTEX, SQLITE_OPEN_READWRITE, SQLITE_TOOBIG,
 };
 use core::convert::TryFrom;
 use core::hash::{Hash, Hasher};
 use core::ptr::NonNull;
-use libsqlite3_sys::{sqlite3, sqlite3_close, sqlite3_open_v2, sqlite3_prepare_v2, sqlite3_stmt};
+use libsqlite3_sys::{sqlite3, sqlite3_stmt};
 use std::collections::hash_map::{Entry, HashMap};
 use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
