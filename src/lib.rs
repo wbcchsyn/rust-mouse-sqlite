@@ -78,6 +78,7 @@ use libsqlite3::*;
 // https://www.sqlite.org/draft/c3ref/c_open_autoproxy.html
 const SQLITE_OPEN_READWRITE: c_int = 0x00000002;
 const SQLITE_OPEN_CREATE: c_int = 0x00000004;
+const SQLITE_OPEN_MEMORY: c_int = 0x00000080;
 const SQLITE_OPEN_NOMUTEX: c_int = 0x00008000;
 
 // Error constants
